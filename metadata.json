@@ -1,0 +1,6 @@
+{
+  "name": "NetOps 2.0",
+  "description": "Plataforma de gestión operativa de red para control de asignaciones, servicios y logística.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
