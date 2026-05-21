@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Camera, Tag, Trash2 } from 'lucide-react';
+import { Edit3, X, Camera, Tag, Trash2 } from 'lucide-react';
+import { DateTimeInput } from './DateTimeInput';
 import { 
   Service, 
   User, 
@@ -8,14 +9,15 @@ import {
   ServiceTech 
 } from '../types';
 import { 
-  USER_DIRECTORY, 
   CATEGORY_PREFIXES, 
   POPS_LIST,
-  SQUAD_ALIASES
+  VALID_NEXT_STATUS
 } from '../constants';
 
 interface ServiceFormProps {
   user: User | null;
+  users: User[];
+  squadAliases: string[];
   existingService?: Service | null;
   services: Service[];
   onClose: () => void;
@@ -25,6 +27,8 @@ interface ServiceFormProps {
 
 export const ServiceForm: React.FC<ServiceFormProps> = ({ 
   user, 
+  users,
+  squadAliases,
   existingService, 
   services,
   onClose, 
@@ -32,6 +36,7 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
   onDelete
 }) => {
   const [formData, setFormData] = useState<Partial<Service>>({});
+  const [pendingStatus, setPendingStatus] = useState<ServiceStatus | null>(null);
   const isEditing = !!existingService;
 
   useEffect(() => {
@@ -51,6 +56,7 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
         fechaCreacion: now.toISOString(),
         creadoPor: user?.email || '',
         status: 'Registrado',
+        statusHistory: [{ status: 'Registrado', timestamp: now.toISOString() }],
         prioridad: 'Media',
         estado: 'Nuevo servicio',
         tipoTecnologia: 'Fibra óptica',
@@ -134,28 +140,28 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
         </div>
 
         <div className="flex-1 overflow-auto p-8 space-y-10 font-sans">
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Fecha/Hr de creación</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha/Hr de creación</label>
               <input 
                 type="text" 
                 disabled 
                 value={formData.fechaCreacion ? new Date(formData.fechaCreacion).toLocaleString() : ''}
-                className="w-full bg-gray-50 border-gray-200 rounded-lg text-sm text-gray-500 px-4 py-2.5" 
+                className="w-full bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 px-4 py-2.5 cursor-not-allowed select-none" 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Creado por*</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Creado por*</label>
               <input 
                 type="text" 
                 disabled 
                 value={formData.creadoPor || ''}
-                className="w-full bg-gray-50 border-gray-200 rounded-lg text-sm text-gray-500 px-4 py-2.5" 
+                className="w-full bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 px-4 py-2.5 cursor-not-allowed select-none" 
               />
             </div>
             {isEditing && (
               <div className="col-span-2 space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">ID</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase">ID</label>
                 <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
                   <Tag size={16} className="text-blue-500" />
                   <span className="font-mono text-sm font-bold text-blue-700">{formData.id}</span>
@@ -163,52 +169,56 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
               </div>
             )}
             <div className="col-span-2 space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Nombre de Servicio*</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Nombre de Servicio*</label>
               <input 
                 type="text" 
                 placeholder="Ej. Mantenimiento Preventivo Pop..."
-                className="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 px-4 py-2.5 transition-all" 
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" 
                 value={formData.nombre || ''}
                 onChange={e => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Fecha/Hr visita*</label>
-              <input 
-                type="datetime-local" 
-                className="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 px-4 py-2.5 transition-all" 
-                value={formData.fechaInicio ? formData.fechaInicio.slice(0, 16) : ''}
-                onChange={e => setFormData(prev => ({ ...prev, fechaInicio: e.target.value }))}
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha/Hr visita*</label>
+              <DateTimeInput
+                value={formData.fechaInicio || ''}
+                onChange={(iso) => setFormData(prev => ({...prev, fechaInicio: iso}))}
+                placeholder="ddmmaaaa hhmm a/p"
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Fecha/Hr fin visita*</label>
-              <input 
-                type="datetime-local" 
-                className="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 px-4 py-2.5 transition-all" 
-                value={formData.fechaFin ? formData.fechaFin.slice(0, 16) : ''}
-                onChange={e => setFormData(prev => ({ ...prev, fechaFin: e.target.value }))}
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha/Hr fin visita*</label>
+              <DateTimeInput
+                value={formData.fechaFin || ''}
+                onChange={(iso) => setFormData(prev => ({...prev, fechaFin: iso}))}
+                placeholder="ddmmaaaa hhmm a/p"
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Status</label>
-              <select 
-                className="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 px-4 py-2.5 transition-all"
-                value={formData.status}
-                onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as ServiceStatus }))}
-              >
-                <option value="Registrado">Registrado</option>
-                <option value="Asignado">Asignado</option>
-                <option value="En camino">En camino</option>
-                <option value="En proceso">En proceso</option>
-                <option value="Reprogramado">Reprogramado</option>
-                <option value="Terminado">Terminado</option>
-              </select>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Status</label>
+              {(!formData.status || VALID_NEXT_STATUS[formData.status]?.length === 0) ? (
+                <div className="w-full bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 px-4 py-2.5 cursor-not-allowed select-none">
+                  {formData.status}
+                </div>
+              ) : (
+                <select 
+                  className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all"
+                  value={formData.status}
+                  onChange={e => setPendingStatus(e.target.value as ServiceStatus)}
+                >
+                  <option value={formData.status}>{formData.status}</option>
+                  {VALID_NEXT_STATUS[formData.status].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
           <div className="space-y-6">
-            <label className="text-xs font-bold text-gray-400 uppercase block">Referencias Visuales</label>
+            <label className="text-[10px] font-bold text-gray-400 uppercase block">Referencias Visuales</label>
             <div className="grid grid-cols-4 gap-4">
               {(['fachada', 'referencia1', 'referencia2', 'referencia3'] as const).map((field) => (
                 <label key={field} className="relative aspect-video rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group overflow-hidden">
@@ -228,10 +238,10 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div className="space-y-4">
-              <label className="text-xs font-bold text-gray-400 uppercase block">Prioridad*</label>
-              <div className="flex gap-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block">Prioridad*</label>
+              <div className="flex gap-2 border-l-[3px] border-l-blue-500 pl-2 rounded-sm">
                 {(['Alta', 'Media', 'Baja'] as const).map(p => (
                   <button
                     key={p}
@@ -248,8 +258,8 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
               </div>
             </div>
             <div className="space-y-4">
-              <label className="text-xs font-bold text-gray-400 uppercase block text-right">Estado del servicio*</label>
-              <div className="flex gap-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block text-right">Estado del servicio*</label>
+              <div className="flex gap-2 border-l-[3px] border-l-blue-500 pl-2 rounded-sm">
                 {(['Activo', 'Nuevo servicio', 'Cancelado'] as const).map(st => (
                   <button
                     key={st}
@@ -267,9 +277,9 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
             </div>
 
             <div className="col-span-2 space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Categoría*</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Categoría*</label>
               <select 
-                className="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 px-4 py-2.5 transition-all"
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all"
                 value={formData.categoria}
                 onChange={e => setFormData(prev => ({ ...prev, categoria: e.target.value }))}
               >
@@ -281,14 +291,14 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
             </div>
 
             <div className="space-y-4">
-              <label className="text-xs font-bold text-gray-400 uppercase block font-medium">Status Servicio*</label>
-              <div className="flex gap-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block font-medium">Status Servicio*</label>
+              <div className="flex gap-2 border-l-[3px] border-l-blue-500 pl-2 rounded-sm">
                 <button
                   onClick={() => setFormData(prev => ({ ...prev, statusServicio: 'En tiempo' }))}
                   className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all border ${
                     formData.statusServicio === 'En tiempo' 
                       ? 'bg-blue-600 text-white border-blue-600' 
-                      : 'bg-white text-gray-500 border-gray-200'
+                      : 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
                   }`}
                 >
                   En tiempo
@@ -297,8 +307,8 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
                   onClick={() => setFormData(prev => ({ ...prev, statusServicio: 'Extemporáneo' }))}
                   className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all border ${
                     formData.statusServicio === 'Extemporáneo' 
-                      ? 'bg-blue-100/50 text-blue-800 border-blue-200' 
-                      : 'bg-white text-gray-500 border-gray-200'
+                      ? 'bg-blue-600 text-white border-blue-600' 
+                      : 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
                   }`}
                 >
                   Extemporáneo
@@ -307,15 +317,15 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
             </div>
 
             <div className="space-y-4">
-              <label className="text-xs font-bold text-gray-400 uppercase block">Tipo Tecnología</label>
-              <div className="flex gap-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block">Tipo Tecnología</label>
+              <div className="flex gap-2 border-l-[3px] border-l-blue-500 pl-2 rounded-sm">
                 {(['Fibra óptica', 'Microondas'] as const).map(tech => (
                   <button
                     key={tech}
                     onClick={() => setFormData(prev => ({ ...prev, tipoTecnologia: tech }))}
                     className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all border ${
                       formData.tipoTecnologia === tech 
-                        ? 'bg-blue-50/50 text-blue-700 border-blue-200' 
+                        ? 'bg-blue-600 text-white border-blue-600' 
                         : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
                     }`}
                   >
@@ -326,9 +336,9 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
             </div>
 
             <div className="col-span-2 space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Actividad a realizar</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Actividad a realizar</label>
               <textarea 
-                className="w-full border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 px-4 py-3 min-h-[100px]"
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-3 min-h-[100px] transition-all"
                 placeholder="Descripción detallada de la tarea..."
                 value={formData.actividadARealizar || ''}
                 onChange={e => setFormData(prev => ({ ...prev, actividadARealizar: e.target.value }))}
@@ -336,13 +346,13 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Ticket WSAS</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.ticketWSAS || ''} onChange={e => setFormData(prev => ({ ...prev, ticketWSAS: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Ticket WSAS</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.ticketWSAS || ''} onChange={e => setFormData(prev => ({ ...prev, ticketWSAS: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Team</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Team</label>
               <select 
-                className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm"
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all"
                 value={formData.team}
                 onChange={e => setFormData(prev => ({ ...prev, team: e.target.value as ServiceTeam }))}
               >
@@ -352,35 +362,32 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
               </select>
             </div>
             <div className="col-span-2 space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Cuadrilla</label>
-              <select 
-                className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm"
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Cuadrilla</label>
+              <select
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all"
                 value={formData.cuadrillaAlias}
-                onChange={e => setFormData(prev => ({ ...prev, cuadrillaAlias: e.target.value }))}
+                onChange={e => setFormData(prev => ({...prev, cuadrillaAlias: e.target.value}))}
               >
                 <option value="Sin cuadrilla">Sin cuadrilla</option>
-                {USER_DIRECTORY.filter(u => u.rol === 'CUADRILLA').map(u => (
-                  <option key={u.email} value={u.alias}>{u.alias} ({u.nombre})</option>
-                ))}
-                {SQUAD_ALIASES.map(alias => (
+                {squadAliases.map(alias => (
                   <option key={alias} value={alias}>{alias}</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Razón social Cliente</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.razonSocialCliente || ''} onChange={e => setFormData(prev => ({ ...prev, razonSocialCliente: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Razón social Cliente</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.razonSocialCliente || ''} onChange={e => setFormData(prev => ({ ...prev, razonSocialCliente: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Dirección Cliente</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.direccionCliente || ''} onChange={e => setFormData(prev => ({ ...prev, direccionCliente: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Dirección Cliente</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.direccionCliente || ''} onChange={e => setFormData(prev => ({ ...prev, direccionCliente: e.target.value }))} />
             </div>
 
             <div className="col-span-2 space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">POP</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase">POP</label>
               <select 
-                className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm"
+                className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all"
                 value={formData.pop}
                 onChange={e => setFormData(prev => ({ ...prev, pop: e.target.value }))}
               >
@@ -390,33 +397,70 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Identificador</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.identificador || ''} onChange={e => setFormData(prev => ({ ...prev, identificador: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Identificador</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.identificador || ''} onChange={e => setFormData(prev => ({ ...prev, identificador: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Referencias ubicación</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.referenciasUbicacion || ''} onChange={e => setFormData(prev => ({ ...prev, referenciasUbicacion: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Referencias ubicación</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.referenciasUbicacion || ''} onChange={e => setFormData(prev => ({ ...prev, referenciasUbicacion: e.target.value }))} />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Nombre de contacto</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.nombreContacto || ''} onChange={e => setFormData(prev => ({ ...prev, nombreContacto: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Nombre de contacto</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.nombreContacto || ''} onChange={e => setFormData(prev => ({ ...prev, nombreContacto: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Teléfono de contacto</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.telefonoContacto || ''} onChange={e => setFormData(prev => ({ ...prev, telefonoContacto: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Teléfono de contacto</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.telefonoContacto || ''} onChange={e => setFormData(prev => ({ ...prev, telefonoContacto: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Email contacto</label>
-              <input type="email" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm" value={formData.emailContacto || ''} onChange={e => setFormData(prev => ({ ...prev, emailContacto: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Email contacto</label>
+              <input type="email" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.emailContacto || ''} onChange={e => setFormData(prev => ({ ...prev, emailContacto: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">QR</label>
-              <input type="text" className="w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-blue-600" value={formData.qr || 'http://'} onChange={e => setFormData(prev => ({ ...prev, qr: e.target.value }))} />
+              <label className="text-[10px] font-bold text-gray-400 uppercase">QR</label>
+              <input type="text" className="w-full bg-white border border-gray-300 border-l-[3px] border-l-blue-500 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none px-4 py-2.5 transition-all" value={formData.qr || 'http://'} onChange={e => setFormData(prev => ({ ...prev, qr: e.target.value }))} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {pendingStatus && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Cambiar Status</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              ¿Confirmas cambiar el status de <strong>{formData.status}</strong> a <strong>{pendingStatus}</strong>?<br/>
+              Esta acción quedará registrada en el historial.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setPendingStatus(null)}
+                className="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    status: pendingStatus,
+                    statusHistory: [
+                      ...(prev.statusHistory || []),
+                      { status: pendingStatus, timestamp: new Date().toISOString() }
+                    ]
+                  }));
+                  setPendingStatus(null);
+                }}
+                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-md shadow-blue-200"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

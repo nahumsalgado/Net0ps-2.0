@@ -25,7 +25,10 @@ import {
   ExternalLink,
   Truck,
   PlusCircle,
-  History
+  History,
+  Circle,
+  UserCheck,
+  Zap
 } from 'lucide-react';
 import { 
   Service, 
@@ -48,6 +51,10 @@ interface ServiciosProps {
   services: Service[];
   setServices: React.Dispatch<React.SetStateAction<Service[]>>;
   onProductivityUpdate?: (points: Record<string, number>) => void;
+  users: User[];
+  setUsers: any;
+  squadAliases: string[];
+  userCards: Record<string, string>;
 }
 
 const STATUS_ICONS: Record<ServiceStatus, React.ReactNode> = {
@@ -59,52 +66,57 @@ const STATUS_ICONS: Record<ServiceStatus, React.ReactNode> = {
   'Terminado': <CheckCircle2 size={16} className="text-green-500" />
 };
 
+const TIMELINE_CONFIG: Record<ServiceStatus, { icon: React.ReactNode, color: string }> = {
+  'Registrado': { icon: <Circle size={12} />, color: 'gray' },
+  'Asignado': { icon: <UserCheck size={12} />, color: 'blue' },
+  'En camino': { icon: <Truck size={12} />, color: 'amber' },
+  'En proceso': { icon: <Zap size={12} />, color: 'indigo' },
+  'Reprogramado': { icon: <RotateCcw size={12} />, color: 'orange' },
+  'Terminado': { icon: <CheckCircle2 size={12} />, color: 'green' }
+};
+
 const ServiceTimeline: React.FC<{ service: Service }> = ({ service }) => {
-  const milestones = [
-    { label: 'Created', date: service.fechaCreacion, icon: <PlusCircle size={12} />, color: 'gray' },
-    { label: 'Assigned', date: service.fechaInicio, icon: <UserIcon size={12} />, color: 'blue' },
-    { label: 'In Transit', date: service.horaEnCamino, icon: <Truck size={12} />, color: 'amber' },
-    { label: 'In Progress', date: service.horaLlegada, icon: <PlayCircle size={12} />, color: 'indigo' },
-    { label: 'Rescheduled', date: service.fechaReprogramado, icon: <History size={12} />, color: 'orange' },
-    { label: 'Completed', date: service.fechaFin, icon: <CheckCircle2 size={12} />, color: 'green' },
-  ].filter(m => m.date);
+  const milestones = service.statusHistory || [];
 
   return (
     <div className="space-y-4">
-      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Timeline de Seguimiento</label>
+      <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Timeline de Seguimiento</label>
       <div className="relative pl-6 space-y-4 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-100">
-        {milestones.map((m, idx) => (
-          <div key={idx} className="relative">
-            <div className={`absolute -left-[23px] top-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10 
-              ${m.color === 'gray' ? 'bg-gray-400 text-white' : 
-                m.color === 'blue' ? 'bg-blue-500 text-white' : 
-                m.color === 'amber' ? 'bg-amber-500 text-white' : 
-                m.color === 'indigo' ? 'bg-indigo-500 text-white' : 
-                m.color === 'green' ? 'bg-green-500 text-white' : 
-                'bg-orange-500 text-white'}`}
-            >
-              {m.icon}
-            </div>
-            <div className="bg-gray-50/50 p-2.5 rounded-xl border border-gray-100 flex flex-col gap-0.5">
-              <span className="text-[9px] font-extrabold text-gray-800 uppercase leading-none">{m.label}</span>
-              <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
-                <Clock size={10} className="text-gray-400" />
-                {new Date(m.date).toLocaleString([], { 
-                  day: '2-digit', 
-                  month: '2-digit', 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
+        {milestones.map((m, idx) => {
+          const config = TIMELINE_CONFIG[m.status] || TIMELINE_CONFIG['Registrado'];
+          return (
+            <div key={idx} className="relative">
+              <div className={`absolute -left-[23px] top-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10 
+                ${config.color === 'gray' ? 'bg-gray-400 text-white' : 
+                  config.color === 'blue' ? 'bg-blue-500 text-white' : 
+                  config.color === 'amber' ? 'bg-amber-500 text-white' : 
+                  config.color === 'indigo' ? 'bg-indigo-500 text-white' : 
+                  config.color === 'green' ? 'bg-green-500 text-white' : 
+                  'bg-orange-500 text-white'}`}
+              >
+                {config.icon}
+              </div>
+              <div className="bg-gray-50/50 p-2.5 rounded-xl border border-gray-100 flex flex-col gap-0.5">
+                <span className="text-[9px] font-extrabold text-gray-800 uppercase leading-none">{m.status}</span>
+                <div className="flex items-center gap-1.5 text-[10px] md:text-[11px] text-gray-500 font-medium">
+                  <Clock size={10} className="text-gray-400" />
+                  {new Date(m.timestamp).toLocaleString([], { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 };
 
-export const Servicios: React.FC<ServiciosProps> = ({ user, services, setServices, onProductivityUpdate }) => {
+export const Servicios: React.FC<ServiciosProps> = ({ user, services, setServices, onProductivityUpdate, users, setUsers, squadAliases, userCards }) => {
 
   // Productivity calculation
   useEffect(() => {
@@ -178,10 +190,10 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
     <div className="flex h-[calc(100vh-280px)] -m-8 overflow-hidden bg-white">
       {/* Sidebar de Filtros */}
       <div className="w-64 border-r border-gray-100 flex flex-col bg-gray-50/50">
-        <div className="p-4 space-y-8 bg-white border-b border-gray-100 flex-1 overflow-auto shadow-sm">
+        <div className="p-4 space-y-8 bg-white border-b border-gray-100 flex-1 overflow-auto overflow-x-auto shadow-sm">
           {isAdmin && (
             <section>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Filtrar por Usuario</h3>
+              <h3 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Filtrar por Usuario</h3>
               <div className="space-y-1">
                 <button
                   onClick={() => setSelectedUserFilter('All')}
@@ -212,25 +224,25 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
           )}
 
           <section>
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <h3 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
               <Calendar size={14} />
               Rango de Fechas
             </h3>
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha Inicial</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Fecha Inicial</label>
                 <input 
                   type="date" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs md:text-sm p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   value={dateRangeStart}
                   onChange={(e) => setDateRangeStart(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha Final</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Fecha Final</label>
                 <input 
                   type="date" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs md:text-sm p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   value={dateRangeEnd}
                   onChange={(e) => setDateRangeEnd(e.target.value)}
                 />
@@ -238,7 +250,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
               {(dateRangeStart || dateRangeEnd) && (
                 <button 
                   onClick={() => { setDateRangeStart(''); setDateRangeEnd(''); }}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-[10px] font-bold text-blue-600 hover:bg-blue-50 border border-blue-100 rounded-lg uppercase transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-2 text-[10px] md:text-[11px] font-bold text-blue-600 hover:bg-blue-50 border border-blue-100 rounded-lg uppercase transition-all"
                 >
                   <RotateCcw size={12} />
                   Limpiar Fechas
@@ -256,7 +268,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
                  setDateRangeEnd('');
                  setSearchTerm('');
                }}
-               className="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 uppercase text-center"
+               className="w-full py-2 text-[10px] md:text-[11px] font-bold text-gray-400 hover:text-gray-600 uppercase text-center"
              >
                Resetear Filtros
              </button>
@@ -284,7 +296,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
                 <Calendar size={14} className="text-gray-400" />
                 <input 
                   type="date" 
-                  className="bg-transparent border-none text-xs text-gray-600 focus:ring-0 p-0"
+                  className="bg-transparent border-none text-xs md:text-sm text-gray-600 focus:ring-0 p-0"
                   value={dateRangeStart}
                   onChange={(e) => setDateRangeStart(e.target.value)}
                 />
@@ -293,7 +305,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
               <div className="flex items-center gap-2 px-2">
                 <input 
                   type="date" 
-                  className="bg-transparent border-none text-xs text-gray-600 focus:ring-0 p-0"
+                  className="bg-transparent border-none text-xs md:text-sm text-gray-600 focus:ring-0 p-0"
                   value={dateRangeEnd}
                   onChange={(e) => setDateRangeEnd(e.target.value)}
                 />
@@ -328,27 +340,27 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[2000px]">
             <thead className="sticky top-0 bg-white z-10 border-b border-gray-100">
               <tr>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-12 text-center"></th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-40">ID</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-64">Nombre de Servicio</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-48">Fecha/Hr visita</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-48">Categoría</th>
-                {isAdmin && <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-24">Puntos</th>}
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-40">Tipo Tecnología</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-32">Team</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-40">Cuadrilla</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-32">Status</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-80">Actividad a realizar</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-40">Hora llegada a sitio</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-32">Fachada</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-32">Referencia 1</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-32">Referencia 2</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-32">Referencia 3</th>
-                <th className="p-3 text-[10px] font-bold text-gray-400 uppercase w-48">Hora en camino</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-12 text-center"></th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-40">ID</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-64">Nombre de Servicio</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-48">Fecha/Hr visita</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-48">Categoría</th>
+                {isAdmin && <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-24">Puntos</th>}
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-40">Tipo Tecnología</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-32">Team</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-40">Cuadrilla</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-32">Status</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-80">Actividad a realizar</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-40">Hora llegada a sitio</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-32">Fachada</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-32">Referencia 1</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-32">Referencia 2</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-32">Referencia 3</th>
+                <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-48">Hora en camino</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -361,19 +373,19 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
                   <td className="p-3 text-center">
                     {STATUS_ICONS[service.status]}
                   </td>
-                  <td className="p-3 font-mono text-xs font-bold text-blue-600">{service.id}</td>
-                  <td className="p-3 text-xs font-medium text-gray-700 truncate">{service.nombre}</td>
-                  <td className="p-3 text-xs text-gray-500 whitespace-nowrap">
+                  <td className="p-3 font-mono text-xs md:text-sm font-bold text-blue-600">{service.id}</td>
+                  <td className="p-3 text-xs md:text-sm font-medium text-gray-700 truncate">{service.nombre}</td>
+                  <td className="p-3 text-xs md:text-sm text-gray-500 whitespace-nowrap">
                     {new Date(service.fechaInicio).toLocaleDateString()} {new Date(service.fechaInicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </td>
                   <td className="p-3">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600 truncate inline-block max-w-full">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] md:text-[11px] font-medium bg-gray-100 text-gray-600 truncate inline-block max-w-full">
                       {service.categoria}
                     </span>
                   </td>
                   {isAdmin && (
                     <td className="p-3 text-center">
-                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      <span className="text-xs md:text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
                         {CATEGORY_POINTS[service.categoria] || 0}
                       </span>
                     </td>
@@ -382,7 +394,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
                   <td className="p-3 text-[11px] text-gray-600">{service.team}</td>
                   <td className="p-3 text-[11px] font-medium text-gray-700">{service.cuadrillaAlias}</td>
                   <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                    <span className={`px-2 py-0.5 rounded text-[10px] md:text-[11px] font-bold uppercase
                       ${service.status === 'Terminado' ? 'bg-green-100 text-green-700' : 
                         service.status === 'En proceso' ? 'bg-blue-100 text-blue-700' :
                         service.status === 'En camino' ? 'bg-amber-100 text-amber-700' :
@@ -392,7 +404,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
                     </span>
                   </td>
                   <td className="p-3 text-[11px] text-gray-500 truncate max-w-xs">{service.actividadARealizar}</td>
-                  <td className="p-3 text-xs text-gray-400 italic">{service.horaLlegada || '--:--'}</td>
+                  <td className="p-3 text-xs md:text-sm text-gray-400 italic">{service.horaLlegada || '--:--'}</td>
                   <td className="p-3">
                     {service.fachada ? (
                       <div className="w-8 h-8 rounded border border-gray-200 overflow-hidden bg-gray-100">
@@ -421,7 +433,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
                       </div>
                     ) : '-'}
                   </td>
-                  <td className="p-3 text-xs text-gray-400 italic">{service.horaEnCamino || '--:--'}</td>
+                  <td className="p-3 text-xs md:text-sm text-gray-400 italic">{service.horaEnCamino || '--:--'}</td>
                 </tr>
               ))}
             </tbody>
@@ -431,7 +443,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
 
       {/* Panel de Detalle */}
       {selectedService && (
-        <div className="fixed inset-y-0 right-0 w-[450px] bg-white shadow-2xl z-30 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-2xl z-30 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0">
             <div className="flex items-center gap-3 truncate pr-4">
               <span className={`w-3 h-3 rounded-full flex-shrink-0`} style={{ backgroundColor: selectedService.color }}></span>
@@ -456,81 +468,68 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
               )}
               <button 
                 onClick={() => setSelectedService(null)}
-                className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg ml-1"
+                className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg ml-1 transition-colors"
+                title="Cerrar panel"
               >
                 <X size={20} />
               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto p-6 space-y-8">
+          <div className="flex-1 overflow-auto overflow-x-auto p-6 space-y-8">
             {/* Header Info */}
             <div className="flex items-center justify-between border-b border-gray-50 pb-6">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Service ID</span>
+                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Service ID</span>
                 <div className="flex items-center gap-2">
                   <Tag size={14} className="text-blue-500" />
                   <span className="font-mono text-sm font-bold text-blue-600">{selectedService.id}</span>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Status</span>
-                {isAdmin ? (
-                  <span className={`px-3 py-1 rounded text-xs font-bold uppercase
-                    ${selectedService.status === 'Terminado' ? 'bg-green-100 text-green-700' : 
-                      selectedService.status === 'En proceso' ? 'bg-blue-100 text-blue-700' :
-                      selectedService.status === 'En camino' ? 'bg-amber-100 text-amber-700' :
-                      'bg-gray-100 text-gray-600'}
-                  `}>
-                    {selectedService.status}
-                  </span>
-                ) : (
-                  <select 
-                    value={selectedService.status}
-                    onChange={(e) => {
-                      const newStatus = e.target.value as ServiceStatus;
-                      setServices(prev => prev.map(s => s.id === selectedService.id ? { ...s, status: newStatus } : s));
-                      setSelectedService(prev => prev ? { ...prev, status: newStatus } : null);
-                    }}
-                    className="text-xs font-bold uppercase bg-gray-100 border-none rounded px-2 py-1 focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="Registrado">Registrado</option>
-                    <option value="Asignado">Asignado</option>
-                    <option value="En camino">En camino</option>
-                    <option value="En proceso">En proceso</option>
-                    <option value="Reprogramado">Reprogramado</option>
-                    <option value="Terminado">Terminado</option>
-                  </select>
-                )}
+                <div className="mb-1 text-right">
+                <span className="text-[10px] md:text-[11px] text-gray-400 italic block mb-1">
+                  Presiona Edit para modificar
+                </span>
+                </div>
+                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase block mb-1">Status</span>
+                <span className={`inline-block px-3 py-1 rounded text-xs md:text-sm font-bold uppercase
+                  ${selectedService.status === 'Terminado' ? 'bg-green-100 text-green-700' : 
+                    selectedService.status === 'En proceso' ? 'bg-blue-100 text-blue-700' :
+                    selectedService.status === 'En camino' ? 'bg-amber-100 text-amber-700' :
+                    'bg-gray-100 text-gray-600'}
+                `}>
+                  {selectedService.status}
+                </span>
               </div>
             </div>
 
             {/* Main fields grid */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha creación</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Fecha creación</label>
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <Calendar size={14} className="text-gray-400" />
                   {new Date(selectedService.fechaCreacion).toLocaleString()}
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase truncate block">Creado por</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase truncate block">Creado por</label>
                 <div className="flex items-center gap-2 text-sm text-gray-700 truncate">
                   <UserIcon size={14} className="text-gray-400" />
                   <span className="truncate">{selectedService.creadoPor}</span>
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha visita</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Fecha visita</label>
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <Clock size={14} className="text-gray-400" />
                   {new Date(selectedService.fechaInicio).toLocaleString()}
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Prioridad</label>
-                <div className={`text-xs font-bold uppercase ${
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Prioridad</label>
+                <div className={`text-xs md:text-sm font-bold uppercase ${
                   selectedService.prioridad === 'Alta' ? 'text-red-500' :
                   selectedService.prioridad === 'Media' ? 'text-amber-500' :
                   'text-blue-500'
@@ -542,41 +541,41 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
 
             <div className="space-y-4 pt-4 border-t border-gray-50">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Categoría</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Categoría</label>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                   <span className="text-sm font-medium text-gray-800">{selectedService.categoria}</span>
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Actividad a realizar</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Actividad a realizar</label>
                 <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
                   "{selectedService.actividadARealizar}"
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-50">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Tecnología</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Tecnología</label>
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <Cpu size={14} className="text-gray-400" />
                   {selectedService.tipoTecnologia}
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Team / Cuadrilla</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Team / Cuadrilla</label>
                 <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
                   <Users size={14} className="text-gray-400" />
                   {selectedService.team} - {selectedService.cuadrillaAlias}
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Cliente / Razón Social</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Cliente / Razón Social</label>
                 <div className="text-sm text-gray-700 font-semibold">{selectedService.razonSocialCliente}</div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Pop</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Pop</label>
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <MapPin size={14} className="text-blue-400" />
                   {selectedService.pop}
@@ -585,16 +584,16 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
             </div>
 
             <div className="space-y-4 pt-4 border-t border-gray-50">
-              <label className="text-[10px] font-bold text-gray-400 uppercase block">Contacto</label>
+              <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase block">Contacto</label>
               <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3">
                 <div className="text-sm font-bold text-blue-900">{selectedService.nombreContacto}</div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-xs text-blue-700 flex items-center gap-2">
+                  <div className="text-xs md:text-sm text-blue-700 flex items-center gap-2">
                     <span className="font-mono">{selectedService.telefonoContacto}</span>
                   </div>
                   <a 
                     href={`mailto:${selectedService.emailContacto}`}
-                    className="text-xs text-blue-600 flex items-center gap-2 hover:underline group"
+                    className="text-xs md:text-sm text-blue-600 flex items-center gap-2 hover:underline group"
                   >
                     <Mail size={12} />
                     {selectedService.emailContacto}
@@ -609,8 +608,8 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
             </div>
 
             <div className="pt-4 border-t border-gray-50 flex flex-col gap-4">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Referencias Visuales</label>
-              <div className="grid grid-cols-2 gap-3">
+              <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase">Referencias Visuales</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <DetailImage label="Fachada" src={selectedService.fachada} />
                 <DetailImage label="Referencia 1" src={selectedService.referencia1} />
                 <DetailImage label="Referencia 2" src={selectedService.referencia2} />
@@ -625,6 +624,8 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
       {isFormOpen && (
         <ServiceForm 
           user={user}
+          users={users}
+          squadAliases={squadAliases}
           services={services}
           existingService={editingService}
           onClose={() => setIsFormOpen(false)}
@@ -646,7 +647,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
       {serviceToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Eliminar Servicio</h3>
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Eliminar Servicio</h3>
             <p className="text-sm text-gray-500 mb-6">¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.</p>
             <div className="flex justify-end gap-2">
               <button

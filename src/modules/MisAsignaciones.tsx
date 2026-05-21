@@ -8,9 +8,13 @@ interface MisAsignacionesProps {
   user: User | null;
   services: Service[];
   setServices: React.Dispatch<React.SetStateAction<Service[]>>;
+  users: User[];
+  setUsers: any;
+  squadAliases: string[];
+  userCards: Record<string, string>;
 }
 
-export const MisAsignaciones: React.FC<MisAsignacionesProps> = ({ user, services, setServices }) => {
+export const MisAsignaciones: React.FC<MisAsignacionesProps> = ({ user, services, setServices, users, setUsers, squadAliases, userCards }) => {
   const [viewMode, setViewMode] = useState<CalendarViewMode>('Day');
   const [currentDate, setCurrentDate] = useState(new Date('2026-05-18'));
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -129,6 +133,8 @@ export const MisAsignaciones: React.FC<MisAsignacionesProps> = ({ user, services
                 key={mode}
                 onClick={() => setViewMode(mode)}
                 className={`px-4 py-1 text-sm font-medium rounded-md transition-all ${
+                  mode !== 'Day' ? 'hidden md:block' : ''
+                } ${
                   viewMode === mode ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -146,10 +152,10 @@ export const MisAsignaciones: React.FC<MisAsignacionesProps> = ({ user, services
                    {isAdmin && (
             <button 
               onClick={handleOpenCreateModal}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors"
             >
               <Plus size={18} />
-              New Service
+              <span className="hidden md:inline">New Service</span>
             </button>
           )}
         </div>
@@ -291,6 +297,8 @@ export const MisAsignaciones: React.FC<MisAsignacionesProps> = ({ user, services
       {isFormOpen && (
         <ServiceForm 
           user={user}
+          users={users}
+          squadAliases={squadAliases}
           services={services}
           existingService={editingService}
           onClose={() => setIsFormOpen(false)}

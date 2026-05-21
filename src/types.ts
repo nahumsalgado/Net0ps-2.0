@@ -2,10 +2,12 @@ export type UserRole = 'CUADRILLA' | 'ADMINISTRADOR';
 
 export interface User {
   email: string;
+  nombre: string;
   region?: string;
   alias?: string;
-  nombre: string;
   rol: UserRole;
+  tarjeta?: string;
+  activo: boolean;
 }
 
 export type ServiceStatus = 'Registrado' | 'Asignado' | 'En camino' | 'En proceso' | 'Reprogramado' | 'Terminado';
@@ -13,6 +15,11 @@ export type ServicePriority = 'Alta' | 'Media' | 'Baja';
 export type ServiceState = 'Activo' | 'Nuevo servicio' | 'Cancelado';
 export type ServiceTech = 'Fibra óptica' | 'Microondas';
 export type ServiceTeam = 'OSP CMX' | 'OSP MTY' | 'OSP QRO';
+
+export interface StatusChange {
+  status: ServiceStatus;
+  timestamp: string;
+}
 
 export interface Service {
   id: string;
@@ -23,6 +30,7 @@ export interface Service {
   fechaInicio: string; // Fecha/Hr visita
   fechaFin: string;
   status: ServiceStatus;
+  statusHistory: StatusChange[];
   prioridad: ServicePriority;
   estado: ServiceState;
   categoria: string;
@@ -92,6 +100,71 @@ export interface GasRequest {
   fotoTableroDespues?: string;
 }
 
+export type ExpenseStatus = 'Solicitado' | 'Autorizado' | 'Reembolsado' | 'Cancelado';
+export type ExpenseValidationType = 'Gastos' | 'Viáticos';
+
+export interface ExpenseRequest {
+  id: string; // GAS-xxx or VIA-xxx
+  userEmail: string;
+  tarjeta: string;
+  team: string; // Fijo "Pre-Sales Management"
+  tipoComprobacion: ExpenseValidationType;
+  fecha: string; // ISO string
+  noFactura: string;
+  nombreRazonSocial: string;
+  motivo: string;
+  tipo: string;
+  total: number;
+  comprobante1?: string; // base64
+  comprobante2?: string; // base64
+  comprobante3?: string; // base64
+  estatus: ExpenseStatus;
+  fechaAutorizacion?: string; // ISO string
+  autorizadoPor?: string;
+}
+
+export interface PopSite {
+  id: string;
+  nombre: string;
+  nombreCorto: string;
+  status: 'activo' | 'cancelado';
+  lat: number;
+  lng: number;
+  region: 'CMX' | 'EMX' | 'MTY' | 'QRO' | 'HID' | 'MOR' | 'PUE' | 'GDL';
+  tecnologia: string;
+  responsableN1: string;
+  responsableN2: string;
+  cuadrilla: string;
+  horarioIngreso: string;
+  tiempoLlegada: string;
+  requerimientosAcceso: string;
+  llaveAcceso: boolean;
+  baterias: string;
+  calificacion: 'ALTA' | 'MEDIA' | 'BAJA' | '';
+  contactoArrendador: string;
+}
+
+export type OvertimeStatus = 'En revisión' | 'Autorizado' | 'Rechazado' | 'Pagado';
+
+export interface OvertimeRecord {
+  id: string;
+  email: string;
+  cuadrilla: string;
+  checkInLocation: { lat: number; lng: number };
+  timeCheckIn: string;
+  timeCheckOut: string;
+  checkOutLocation?: { lat: number; lng: number };
+  horasRegistradas: number;
+  horasExtrasCalculadas: number;
+  date: string;
+  status: OvertimeStatus;
+  horasAutorizadas: number;
+  semanaRegistro: string;
+  semanaPago: string;
+  metodoPago: string;
+  comentarios: string;
+}
+
 export type ModuleId = 
   | 'mis-asignaciones' 
   | 'check-in-out' 
@@ -102,7 +175,8 @@ export type ModuleId =
   | 'gestion-cuadrillas' 
   | 'ubicacion-pops' 
   | 'cierre-empalme' 
-  | 'sla';
+  | 'sla'
+  | 'gestion-usuarios';
 
 export interface NavItem {
   id: ModuleId;

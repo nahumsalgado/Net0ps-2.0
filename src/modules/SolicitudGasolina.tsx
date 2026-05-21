@@ -24,11 +24,15 @@ import {
   DollarSign
 } from 'lucide-react';
 import { User, GasRequest, GasStatus, GasolineAsignacion } from '../types';
-import { MOCK_GAS_REQUESTS, SQUAD_ALIASES, USER_DIRECTORY } from '../constants';
+import { MOCK_GAS_REQUESTS } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface SolicitudGasolinaProps {
   user: User | null;
+  users: User[];
+  setUsers: any;
+  squadAliases: string[];
+  userCards: Record<string, string>;
 }
 
 const STATUS_CONFIG: Record<GasStatus, { color: string; bg: string; icon: React.ReactNode }> = {
@@ -45,7 +49,7 @@ const GAS_STATUSES: GasStatus[] = [
   'Registrado', 'Autorizado', 'Dispersado', 'Cargado/Comprobación', 'Pendiente', 'Cerrado', 'Rechazado'
 ];
 
-export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) => {
+export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user, users, squadAliases, userCards }) => {
   const [requests, setRequests] = useState<GasRequest[]>(MOCK_GAS_REQUESTS);
   const [selectedRequest, setSelectedRequest] = useState<GasRequest | null>(null);
   const [editingRequest, setEditingRequest] = useState<GasRequest | null>(null);
@@ -146,19 +150,19 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 custom-scrollbar">
+        <div className="flex-1 overflow-auto overflow-x-auto p-4 custom-scrollbar">
           <table className="w-full border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left text-gray-400">
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Cuadrilla</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider">ID</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Solicitante</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Hora y fecha</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Status</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Asignacion de uso</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Tarjeta</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-center">Foto Tablero</th>
-                <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-right">Kilometraje</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">Cuadrilla</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">ID</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">Solicitante</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">Hora y fecha</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">Status</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">Asignacion de uso</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">Tarjeta</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-center">Foto Tablero</th>
+                <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-right">Kilometraje</th>
               </tr>
             </thead>
             <tbody>
@@ -170,7 +174,7 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
                   <React.Fragment key={status}>
                     <tr className="cursor-pointer" onClick={() => toggleGroup(status)}>
                       <td colSpan={9} className="py-2">
-                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                        <div className="flex items-center gap-2 text-xs md:text-sm font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                           <span>{status} ({group.length})</span>
                         </div>
@@ -195,7 +199,7 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
                         <td className="px-4 py-3 text-[11px] text-gray-600 truncate max-w-[150px]">{req.solicitante}</td>
                         <td className="px-4 py-3 text-[11px] text-gray-500 whitespace-nowrap">{req.fechaHr}</td>
                         <td className="px-4 py-3">
-                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold w-fit ${STATUS_CONFIG[req.status].bg} ${STATUS_CONFIG[req.status].color}`}>
+                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold w-fit ${STATUS_CONFIG[req.status].bg} ${STATUS_CONFIG[req.status].color}`}>
                             {STATUS_CONFIG[req.status].icon}
                             {req.status}
                           </div>
@@ -233,14 +237,14 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            className="absolute right-0 top-0 bottom-0 w-[400px] bg-white border-l border-gray-200 shadow-2xl z-40 flex flex-col"
+            className="absolute right-0 top-0 bottom-0 w-full md:w-[400px] bg-white border-l border-gray-200 shadow-2xl z-40 flex flex-col"
           >
             <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
               <div className="flex items-center gap-3">
                 <Truck size={18} className="text-blue-600" />
                 <div>
                   <h3 className="font-bold text-gray-800 text-sm truncate max-w-[200px]">{selectedRequest.cuadrilla}</h3>
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{selectedRequest.id}</span>
+                  <span className="text-[10px] md:text-[11px] text-gray-400 font-bold uppercase tracking-wider">{selectedRequest.id}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -254,43 +258,31 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
                     </button>
                   </>
                 )}
-                <button onClick={() => setSelectedRequest(null)} className="p-2 text-gray-400 hover:text-gray-600">
-                  <X size={18} />
+                <button 
+                  onClick={() => setSelectedRequest(null)} 
+                  className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg transition-colors"
+                >
+                  <X size={20} />
                 </button>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
               {/* Status Section */}
+              <div className="mb-2">
+                <p className="text-[10px] md:text-[11px] text-gray-400 italic">
+                  Presiona Edit para modificar este registro
+                </p>
+              </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</label>
-                <div className="relative">
-                  <select 
-                    className={`w-full appearance-none pl-4 pr-10 py-2.5 rounded-lg border text-xs font-bold shadow-sm transition-all focus:ring-2 outline-none ${STATUS_CONFIG[selectedRequest.status].bg} ${STATUS_CONFIG[selectedRequest.status].color} border-transparent`}
-                    value={selectedRequest.status}
-                    onChange={(e) => {
-                      const newStatus = e.target.value as GasStatus;
-                      if (!isAdmin) {
-                        if (selectedRequest.status === 'Dispersado' && newStatus === 'Cargado/Comprobación') {
-                          handleStatusChange(selectedRequest.id, newStatus);
-                        } else {
-                          setErrorMessage('As a Crew member, you can only change status from Dispersado to Cargado/Comprobación.');
-                        }
-                      } else {
-                        handleStatusChange(selectedRequest.id, newStatus);
-                      }
-                    }}
-                  >
-                    {GAS_STATUSES.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" size={14} />
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Status</label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-800">
+                  {selectedRequest.status}
                 </div>
               </div>
 
               {/* Base Info */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DetailItem icon={<UserIcon size={12} />} label="Solicitante" value={selectedRequest.solicitante} />
                 <DetailItem icon={<Calendar size={12} />} label="Fecha/Hora" value={selectedRequest.fechaHr} />
                 <DetailItem icon={<Truck size={12} />} label="Asignación" value={selectedRequest.asignacionUso} />
@@ -302,14 +294,14 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
               {isAdmin && (
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Carga Autorizada</span>
+                    <span className="text-[10px] md:text-[11px] font-bold text-blue-600 uppercase tracking-wider">Carga Autorizada</span>
                     <span className="text-sm font-bold text-blue-700">${selectedRequest.cargaAutorizada?.toLocaleString() || '0'}</span>
                   </div>
                 </div>
               )}
 
               <div className="space-y-4">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Evidencia</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Evidencia</label>
                 <DetailImage label="Foto Tablero / Garrafa vaca" src={selectedRequest.fotoTableroAntes} />
                 
                 {selectedRequest.status === 'Cargado/Comprobación' && (
@@ -323,7 +315,7 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Comentarios</label>
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Comentarios</label>
                 <div className="p-3 bg-gray-50 rounded-lg text-[11px] text-gray-600 min-h-[60px] border border-gray-100">
                   {selectedRequest.comentarios || 'No comments'}
                 </div>
@@ -368,7 +360,7 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
       {requestToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Eliminar Solicitud</h3>
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Eliminar Solicitud</h3>
             <p className="text-sm text-gray-500 mb-6">¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.</p>
             <div className="flex justify-end gap-2">
               <button
@@ -397,7 +389,7 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user }) =>
       {errorMessage && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+            <h3 className="text-lg md:text-xl font-bold text-red-600 mb-2 flex items-center gap-2">
               <AlertCircle size={20} />
               Error de Permisos
             </h3>
@@ -540,7 +532,7 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-800">GasRequest Form</h2>
+        <h2 className="text-lg md:text-xl font-bold text-gray-800">GasRequest Form</h2>
         <div className="flex items-center gap-2">
           {isEdit && isAdmin && onDelete && (
             <button 
@@ -551,10 +543,10 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
               <Trash2 size={16} />
             </button>
           )}
-          <button onClick={onClose} className="px-4 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
+          <button onClick={onClose} className="px-4 py-1.5 text-xs md:text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
           <button 
             onClick={handleSave}
-            className="px-6 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-blue-700 transition-colors"
+            className="px-6 py-1.5 bg-blue-600 text-white rounded-lg text-xs md:text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors"
           >
             Save
           </button>
@@ -575,11 +567,11 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
           <InputGroup label="Tipo de solicitud" value="Normal" disabled />
           
           <div className="space-y-1.5">
-            <label className={`text-[10px] font-bold uppercase tracking-wider ${errors.asignacionUso ? 'text-red-500' : 'text-gray-400'}`}>
+            <label className={`text-[10px] md:text-[11px] font-bold uppercase tracking-wider ${errors.asignacionUso ? 'text-red-500' : 'text-gray-400'}`}>
               Asignación de uso*
             </label>
             <select 
-              className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 text-xs focus:ring-2 focus:ring-blue-500 transition-all outline-none ${errors.asignacionUso ? 'border-red-200' : 'border-transparent'}`}
+              className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 text-xs md:text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none ${errors.asignacionUso ? 'border-red-200' : 'border-transparent'}`}
               value={formData.asignacionUso}
               onChange={(e) => {
                 setFormData(prev => ({ ...prev, asignacionUso: e.target.value as GasolineAsignacion }));
@@ -599,31 +591,31 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
           <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg border border-gray-100">
              <div className="flex items-center gap-2 text-gray-600">
                <Calendar size={14} />
-               <span className="text-xs font-medium">{formData.fechaHr}</span>
+               <span className="text-xs md:text-sm font-medium">{formData.fechaHr}</span>
              </div>
              <div className="flex items-center gap-2">
-               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</span>
+               <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Status</span>
                {isAdmin ? (
                  <select 
-                   className="bg-white border border-gray-200 rounded px-2 py-1 text-[10px] font-bold outline-none"
+                   className="bg-white border border-gray-200 rounded px-2 py-1 text-[10px] md:text-[11px] font-bold outline-none"
                    value={formData.status}
                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as GasStatus}))}
                  >
                    {GAS_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                  </select>
                ) : (
-                 <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded">{formData.status || 'Registrado'}</span>
+                 <span className="bg-blue-50 text-blue-600 text-[10px] md:text-[11px] font-bold px-2 py-1 rounded">{formData.status || 'Registrado'}</span>
                )}
              </div>
           </div>
 
           {/* Cuadrilla Selector */}
           <div className="space-y-2">
-            <label className={`text-[10px] font-bold uppercase tracking-wider ${errors.cuadrilla ? 'text-red-500' : 'text-gray-400'}`}>
+            <label className={`text-[10px] md:text-[11px] font-bold uppercase tracking-wider ${errors.cuadrilla ? 'text-red-500' : 'text-gray-400'}`}>
               Cuadrilla*
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {SQUAD_ALIASES.map(alias => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {squadAliases.map(alias => (
                 <button 
                   key={alias}
                   onClick={() => {
@@ -647,13 +639,13 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
           </div>
 
           <div className="space-y-1.5">
-            <label className={`text-[10px] font-bold uppercase tracking-wider ${errors.tarjeta ? 'text-red-500' : 'text-gray-400'}`}>
+            <label className={`text-[10px] md:text-[11px] font-bold uppercase tracking-wider ${errors.tarjeta ? 'text-red-500' : 'text-gray-400'}`}>
               Tarjeta*
             </label>
             <input 
               type="text" 
               placeholder="Número tarjeta Efectívale"
-              className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 text-xs focus:ring-2 focus:ring-blue-500 transition-all outline-none ${errors.tarjeta ? 'border-red-200' : 'border-transparent'}`}
+              className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 text-xs md:text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none ${errors.tarjeta ? 'border-red-200' : 'border-transparent'}`}
               value={formData.tarjeta}
               onChange={(e) => {
                 setFormData(prev => ({ ...prev, tarjeta: e.target.value }));
@@ -666,7 +658,7 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
           </div>
 
           <div className="space-y-1.5">
-            <label className={`text-[10px] font-bold uppercase tracking-wider ${errors.fotoTableroAntes ? 'text-red-500' : 'text-gray-400'}`}>
+            <label className={`text-[10px] md:text-[11px] font-bold uppercase tracking-wider ${errors.fotoTableroAntes ? 'text-red-500' : 'text-gray-400'}`}>
               Foto Tablero antes de carga / Foto garrafa vacía*
             </label>
             <div className={`aspect-video bg-gray-50 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 group transition-colors hover:border-blue-300 relative overflow-hidden ${errors.fotoTableroAntes ? 'border-red-200 bg-red-50/30' : 'border-gray-200'}`}>
@@ -675,14 +667,14 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
                ) : (
                  <>
                    <Camera className={errors.fotoTableroAntes ? 'text-red-300' : 'text-gray-300'} size={32} />
-                   <span className={`text-[10px] font-bold uppercase tracking-widest ${errors.fotoTableroAntes ? 'text-red-400' : 'text-gray-400'}`}>Click to upload</span>
+                   <span className={`text-[10px] md:text-[11px] font-bold uppercase tracking-widest ${errors.fotoTableroAntes ? 'text-red-400' : 'text-gray-400'}`}>Click to upload</span>
                  </>
                )}
                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFile('fotoTableroAntes', e)} accept="image/*" />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <NumericInput 
               label="Kilometraje antes de la carga" 
               value={formData.kilometrajeAntes || 0} 
@@ -701,8 +693,8 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
           {isAdmin && (
             <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
               <div>
-                <label className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Carga Autorizada</label>
-                <div className="text-lg font-bold text-blue-700">${formData.cargaAutorizada?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                <label className="text-[10px] md:text-[11px] font-bold text-blue-600 uppercase tracking-wider">Carga Autorizada</label>
+                <div className="text-lg md:text-xl font-bold text-blue-700">${formData.cargaAutorizada?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => setFormData(prev => ({ ...prev, cargaAutorizada: Math.max(0, (prev.cargaAutorizada || 0) - 100) }))} className="w-8 h-8 flex items-center justify-center bg-white rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"><Minus size={14} /></button>
@@ -720,8 +712,8 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-6 pt-6 border-t border-gray-100 overflow-hidden"
               >
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Evidencia de Carga</label>
-                <div className="grid grid-cols-2 gap-4">
+                <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Evidencia de Carga</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <ImageInput label="Ticket Efectívale" field="ticketEfectivale" value={formData.ticketEfectivale} onChange={(e) => handleFile('ticketEfectivale', e)} />
                   <ImageInput label="Ticket Bomba" field="ticketBomba" value={formData.ticketBomba} onChange={(e) => handleFile('ticketBomba', e)} />
                   <ImageInput label="Bomba Cargando" field="bombaCargando" value={formData.bombaCargando} onChange={(e) => handleFile('bombaCargando', e)} />
@@ -732,9 +724,9 @@ const GasRequestForm = ({ user, requests, existingRequest, onClose, onSave, onDe
           </AnimatePresence>
 
           <div className="space-y-1.5 pb-8">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Comentarios</label>
+            <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Comentarios</label>
             <textarea 
-              className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-2.5 text-xs focus:ring-2 focus:ring-blue-500 transition-all outline-none min-h-[100px]"
+              className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-2.5 text-xs md:text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none min-h-[100px]"
               placeholder="Add details..."
               value={formData.comentarios}
               onChange={(e) => setFormData(prev => ({ ...prev, comentarios: e.target.value }))}
@@ -766,11 +758,11 @@ const ImageInput = ({ label, field, value, onChange }: { label: string; field: s
 
 const InputGroup = ({ label, value, disabled }: { label: string; value: string; disabled?: boolean }) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</label>
+    <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">{label}</label>
     <input 
       type="text" 
       disabled={disabled}
-      className={`w-full bg-gray-50 border border-transparent rounded-lg px-4 py-2.5 text-xs outline-none transition-all ${disabled ? 'text-gray-400 font-medium' : 'focus:ring-2 focus:ring-blue-500'}`}
+      className={`w-full bg-gray-50 border border-transparent rounded-lg px-4 py-2.5 text-xs md:text-sm outline-none transition-all ${disabled ? 'text-gray-400 font-medium' : 'focus:ring-2 focus:ring-blue-500'}`}
       value={value}
     />
   </div>
@@ -778,7 +770,7 @@ const InputGroup = ({ label, value, disabled }: { label: string; value: string; 
 
 const NumericInput = ({ label, value, onChange, prefix = '', step = 100 }: { label: string; value: number; onChange: (v: number) => void; prefix?: string; step?: number }) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</label>
+    <label className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">{label}</label>
     <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1 border border-gray-100 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
        <button onClick={() => onChange(Math.max(0, value - step))} className="w-8 h-8 flex items-center justify-center bg-white rounded border border-gray-200 text-gray-400 hover:text-blue-600 transition-colors"><Minus size={14} /></button>
        <div className="flex-1 flex items-center justify-center bg-white rounded border border-gray-100 px-2 h-8">
