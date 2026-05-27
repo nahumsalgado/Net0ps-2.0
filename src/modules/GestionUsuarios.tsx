@@ -121,7 +121,10 @@ export const GestionUsuarios: React.FC<GestionUsuariosProps> = ({ users, setUser
         </div>
 
         <div className="flex-1 overflow-auto overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto -mx-3 md:mx-0">
+<p className="text-[10px] text-gray-400 text-right mb-1 md:hidden">← desliza para ver más →</p>
+<div className="min-w-[700px] md:min-w-0">
+<table className="w-full text-left border-collapse">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
               <tr>
                 <th className="p-4 text-xs md:text-sm font-bold text-gray-400 uppercase">Estado</th>
@@ -175,7 +178,7 @@ export const GestionUsuarios: React.FC<GestionUsuariosProps> = ({ users, setUser
                        </button>
                        <button 
                          onClick={(e) => { e.stopPropagation(); handleOpenEdit(u); }}
-                         className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                         className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
                        >
                          <Edit2 size={16} />
                        </button>
@@ -192,12 +195,14 @@ export const GestionUsuarios: React.FC<GestionUsuariosProps> = ({ users, setUser
               )}
             </tbody>
           </table>
+</div>
+</div>
         </div>
       </div>
 
       {/* Detail Panel */}
       {selectedUser && (
-        <div className="absolute top-0 right-0 bottom-0 w-full md:w-[400px] bg-white border-l border-gray-200 shadow-2xl z-20 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed md:absolute inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 w-full md:w-[400px] bg-white z-30 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-5 border-b border-gray-100 flex justify-between items-start bg-gray-50">
             <div>
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold uppercase mb-3 ${selectedUser.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -210,7 +215,7 @@ export const GestionUsuarios: React.FC<GestionUsuariosProps> = ({ users, setUser
             <div className="flex gap-2">
               <button 
                 onClick={() => handleOpenEdit(selectedUser)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
                 title="Editar usuario"
               >
                 <Edit2 size={18} />

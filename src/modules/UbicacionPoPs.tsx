@@ -189,7 +189,10 @@ export const UbicacionPoPs: React.FC<UbicacionPoPsProps> = ({ user }) => {
         <div className="flex-1 min-h-0">
           {viewMode === 'list' && (
             <div className="h-full overflow-auto overflow-x-auto border border-gray-200 rounded-xl bg-white shadow-sm">
-              <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto -mx-3 md:mx-0">
+<p className="text-[10px] text-gray-400 text-right mb-1 md:hidden">← desliza para ver más →</p>
+<div className="min-w-[700px] md:min-w-0">
+<table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                     <th className="p-4">ID</th>
@@ -239,6 +242,8 @@ export const UbicacionPoPs: React.FC<UbicacionPoPsProps> = ({ user }) => {
                   )}
                 </tbody>
               </table>
+</div>
+</div>
             </div>
           )}
 
@@ -252,7 +257,7 @@ export const UbicacionPoPs: React.FC<UbicacionPoPsProps> = ({ user }) => {
 
       {/* Detail Slider */}
       {selectedPop && (
-        <div className="absolute top-0 right-0 bottom-0 w-full md:w-[400px] bg-white border-l border-gray-200 shadow-2xl z-20 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed md:absolute inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 w-full md:w-[400px] bg-white z-30 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
             <div>
               <h3 className="font-bold text-gray-800 text-lg md:text-xl leading-tight">{selectedPop.nombreCorto}</h3>

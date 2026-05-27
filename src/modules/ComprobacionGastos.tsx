@@ -161,7 +161,10 @@ export const ComprobacionGastos: React.FC<ComprobacionGastosProps> = ({ user, us
         </div>
 
         <div className="flex-1 overflow-auto overflow-x-auto border border-gray-200 rounded-xl bg-white shadow-sm">
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto -mx-3 md:mx-0">
+<p className="text-[10px] text-gray-400 text-right mb-1 md:hidden">← desliza para ver más →</p>
+<div className="min-w-[700px] md:min-w-0">
+<table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                 <th className="p-4 w-[100px]">ID</th>
@@ -207,25 +210,27 @@ export const ComprobacionGastos: React.FC<ComprobacionGastosProps> = ({ user, us
               )}
             </tbody>
           </table>
+</div>
+</div>
         </div>
       </div>
 
       {/* Detail Slider */}
       {selectedExpense && (
-        <div className="absolute top-0 right-0 bottom-0 w-full md:w-[400px] bg-white border-l border-gray-200 shadow-2xl z-20 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed md:absolute inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 w-full md:w-[400px] bg-white z-30 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <h3 className="font-bold text-gray-800 truncate">{selectedExpense.id}</h3>
             <div className="flex items-center gap-1">
               <button 
                 onClick={() => setExpenseToDelete(selectedExpense.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors text-red-600 hover:bg-red-50"
                 title="Eliminar registro"
               >
                 <Trash2 size={18} />
               </button>
               <button 
                 onClick={() => handleOpenEdit(selectedExpense)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors text-blue-600 hover:bg-blue-50"
                 title="Editar registro"
               >
                 <Edit3 size={18} />
@@ -233,7 +238,7 @@ export const ComprobacionGastos: React.FC<ComprobacionGastosProps> = ({ user, us
               <div className="h-6 w-[1px] bg-gray-200 mx-1"></div>
               <button 
                 onClick={() => setSelectedExpense(null)}
-                className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg ml-1 transition-colors"
+                className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>

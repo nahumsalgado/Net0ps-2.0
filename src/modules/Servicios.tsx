@@ -331,17 +331,20 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
                 New Service
               </button>
             )}
-            <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg">
+            <button className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
               <Filter size={20} />
             </button>
-            <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg">
+            <button className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
               <CheckCircle2 size={20} />
             </button>
           </div>
         </div>
 
         <div className="flex-1 overflow-auto overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[2000px]">
+          <div className="overflow-x-auto -mx-3 md:mx-0">
+<p className="text-[10px] text-gray-400 text-right mb-1 md:hidden">← desliza para ver más →</p>
+<div className="min-w-[700px] md:min-w-0">
+<table className="w-full text-left border-collapse min-w-[2000px]">
             <thead className="sticky top-0 bg-white z-10 border-b border-gray-100">
               <tr>
                 <th className="p-3 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase w-12 text-center"></th>
@@ -438,12 +441,14 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
               ))}
             </tbody>
           </table>
+</div>
+</div>
         </div>
       </div>
 
       {/* Panel de Detalle */}
       {selectedService && (
-        <div className="fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-2xl z-30 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed md:absolute inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 w-full md:w-[450px] bg-white z-30 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0">
             <div className="flex items-center gap-3 truncate pr-4">
               <span className={`w-3 h-3 rounded-full flex-shrink-0`} style={{ backgroundColor: selectedService.color }}></span>
@@ -468,7 +473,7 @@ export const Servicios: React.FC<ServiciosProps> = ({ user, services, setService
               )}
               <button 
                 onClick={() => setSelectedService(null)}
-                className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg ml-1 transition-colors"
+                className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Cerrar panel"
               >
                 <X size={20} />

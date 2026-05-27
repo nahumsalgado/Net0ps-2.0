@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ user, setSidebarOpen }) => {
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 z-10 shrink-0">
       <div className="flex items-center gap-3 md:gap-6">
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+          className="md:hidden p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
           onClick={() => setSidebarOpen(prev => !prev)}
         >
           <Menu size={22} />

@@ -157,7 +157,7 @@ export const GestionHorasExtras: React.FC<GestionHorasExtrasProps> = ({ overtime
 
       {/* Detail Panel */}
       {selectedRecord && (
-        <div className="absolute top-0 right-0 bottom-0 w-full md:w-[450px] bg-white border-l border-gray-200 shadow-2xl z-20 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed md:absolute inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 w-full md:w-[450px] bg-white z-30 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
             <div>
                <h3 className="font-bold text-gray-800 truncate">{selectedRecord.email}</h3>

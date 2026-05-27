@@ -167,26 +167,28 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
     return time.getHours() > 10 || (time.getHours() === 10 && time.getMinutes() > 0);
   };
 
+  const getInitials = (email: string) => email.split('@')[0].slice(0, 2).toUpperCase();
+
   return (
     <div className="flex h-full relative overflow-hidden">
       {/* Main List */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${selectedCheck ? 'pr-[400px]' : ''}`}>
-        <div className="flex items-center justify-between mb-6 gap-4">
-          <div className="flex items-center gap-4 flex-1">
-            <h2 className="text-xl font-bold text-gray-800">Check In/Out</h2>
-            <div className="relative flex-1 max-w-sm">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${selectedCheck ? 'md:pr-[400px]' : ''}`}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 flex-1">
+            <h2 className="text-lg md:text-xl font-bold text-gray-800">Check In/Out</h2>
+            <div className="relative flex-1 md:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input 
                 type="text" 
                 placeholder="Search by email or ID..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                className="w-full pl-10 pr-4 py-3 md:py-2 bg-gray-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
                 >
                   <X size={14} />
                 </button>
@@ -195,16 +197,18 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
           </div>
           <button 
             onClick={handleOpenNewCheck}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 transition-colors"
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 min-h-[44px] rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 transition-colors w-full md:w-auto"
           >
             <Plus size={18} />
-            NewCheck
+            <span>+ NewCheck</span>
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {/* Table Header */}
-          <div className="grid grid-cols-[80px_1fr_120px_160px_160px_40px] gap-4 px-4 py-3 bg-gray-50 border-y border-gray-200 text-[11px] font-bold text-gray-500 uppercase">
+          {/* VISTA TABLA — solo desktop */}
+          <div className="hidden md:block">
+            {/* Table Header */}
+            <div className="grid grid-cols-[80px_1fr_120px_160px_160px_40px] gap-4 px-4 py-3 bg-gray-50 border-y border-gray-200 text-[11px] font-bold text-gray-500 uppercase">
             <div>ID</div>
             <div>Email</div>
             <div>Cuadrilla</div>
@@ -248,26 +252,78 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
               ))}
             </div>
           ))}
+          </div>
+
+          {/* VISTA TARJETAS — solo móvil */}
+          <div className="md:hidden space-y-2 px-1">
+            {groupedChecks.map(([date, items]) => (
+              <div key={date}>
+                <div className="bg-gray-100/70 px-3 py-2 text-xs font-bold text-gray-600 rounded-lg mb-2 flex items-center gap-2">
+                  {date} <span className="bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full text-[10px]">{items.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {items.map(check => (
+                    <div key={check.id} onClick={() => setSelectedCheck(check)}
+                      className={`bg-white rounded-xl border p-3 shadow-sm cursor-pointer transition-all active:scale-[0.98] ${selectedCheck?.id === check.id ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}>
+                      {/* Fila 1: Email + Avatar + ID */}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-800 truncate flex-1 mr-2">{check.email}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{check.id.slice(0, 8)}</span>
+                          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold">{getInitials(check.email)}</div>
+                        </div>
+                      </div>
+                      {/* Fila 2: Cuadrilla */}
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <MapPin size={12} className="text-gray-400 shrink-0" />
+                        <span className="text-xs text-gray-600 font-medium">{check.cuadrilla || 'Sin cuadrilla'}</span>
+                      </div>
+                      {/* Fila 3: Tiempos */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-gray-50 rounded-lg px-2 py-1.5">
+                          <p className="text-[9px] text-gray-400 uppercase font-bold mb-0.5">Check In</p>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-semibold text-gray-700">{new Date(check.timeCheckIn).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                            {isLate(check.timeCheckIn) && <AlertTriangle size={11} className="text-amber-500 shrink-0" />}
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg px-2 py-1.5">
+                          <p className="text-[9px] text-gray-400 uppercase font-bold mb-0.5">Check Out</p>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-semibold text-gray-700">{check.timeCheckOut ? new Date(check.timeCheckOut).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                            {check.checkOutLocation && <MapPin size={11} className="text-blue-400 shrink-0" />}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {groupedChecks.length === 0 && (
+              <div className="text-center py-12 text-gray-400 text-sm">No hay registros</div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Detail Slider */}
       {selectedCheck && (
-        <div className="absolute top-0 right-0 bottom-0 w-full md:w-[400px] bg-white border-l border-gray-200 shadow-2xl z-20 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed md:absolute inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 w-full md:w-[400px] bg-white z-30 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <h3 className="font-bold text-gray-800 truncate">{selectedCheck.email}</h3>
             <div className="flex items-center gap-1">
               {isAdmin && (
                 <>
                   <button 
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors text-red-600 hover:bg-red-50"
                     title="Eliminar registro"
                     onClick={() => handleDeleteCheck(selectedCheck.id)}
                   >
                     <Trash2 size={18} />
                   </button>
                   <button 
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors text-blue-600 hover:bg-blue-50"
                     title="Editar registro"
                     onClick={() => handleOpenEditCheck(selectedCheck)}
                   >
@@ -277,7 +333,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
               )}
               <div className="h-6 w-[1px] bg-gray-200 mx-1"></div>
               <button 
-                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors hidden"
+                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-green-600 hover:bg-green-50 rounded-lg transition-colors hidden"
                 title="Autorizar rápido"
                 onClick={() => isAdmin && handleUpdateCheck({...selectedCheck, status: 'Autorizado'})}
               >
@@ -292,7 +348,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
               </button>
               <button 
                 onClick={() => setSelectedCheck(null)}
-                className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg ml-1 transition-colors"
+                className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Cerrar panel"
               >
                 <X size={20} />
@@ -452,7 +508,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
                       <button 
                         key={alias}
                         onClick={() => setFormData({...formData, cuadrilla: alias})}
-                        className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold border transition-all ${
+                        className={`px-3 py-3 min-h-[44px] rounded-lg text-xs md:text-sm font-semibold border transition-all ${
                           formData.cuadrilla === alias 
                             ? 'bg-blue-600 text-white border-blue-600' 
                             : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
@@ -511,7 +567,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={() => setFormData({...formData, horasAutorizadas: Math.max(0, (formData.horasAutorizadas || 0) - 0.5)})}
-                        className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50"
+                        className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50"
                       >
                         <Minus size={16} />
                       </button>
@@ -523,7 +579,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
                       />
                       <button 
                         onClick={() => setFormData({...formData, horasAutorizadas: (formData.horasAutorizadas || 0) + 0.5})}
-                        className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50"
+                        className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50"
                       >
                         <Plus size={16} />
                       </button>
@@ -555,7 +611,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setCheckToDelete(null)}
-                className="px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-100 rounded-lg transition-all border border-transparent hover:border-gray-200"
+                className="px-4 py-3 min-h-[44px] text-sm font-semibold text-gray-500 hover:bg-gray-100 rounded-lg transition-all border border-transparent hover:border-gray-200"
               >
                 Cancelar
               </button>
@@ -566,7 +622,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
                   setIsFormOpen(false);
                   setCheckToDelete(null);
                 }}
-                className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-md shadow-red-200"
+                className="px-4 py-3 min-h-[44px] text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-md shadow-red-200 flex items-center justify-center"
               >
                 Eliminar
               </button>
@@ -584,7 +640,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowCheckOutConfirm(false)}
-                className="px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-100 rounded-lg transition-all border border-transparent hover:border-gray-200"
+                className="px-4 py-3 min-h-[44px] text-sm font-semibold text-gray-500 hover:bg-gray-100 rounded-lg transition-all border border-transparent hover:border-gray-200"
               >
                 Cancelar
               </button>
@@ -625,7 +681,7 @@ export const CheckInOut: React.FC<CheckInOutProps> = ({ user, users, squadAliase
                     });
                   }
                 }}
-                className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg transition-all shadow-md shadow-green-200"
+                className="px-4 py-3 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg transition-all shadow-md shadow-green-200 flex items-center justify-center"
               >
                 Confirmar Salida
               </button>

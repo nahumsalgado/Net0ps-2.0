@@ -143,7 +143,7 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user, user
           </div>
           <button 
             onClick={handleOpenNew}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-3 min-h-[44px] rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors"
           >
             <Plus size={18} />
             <span>New Request</span>
@@ -151,7 +151,10 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user, user
         </div>
 
         <div className="flex-1 overflow-auto overflow-x-auto p-4 custom-scrollbar">
-          <table className="w-full border-separate border-spacing-y-2">
+          <div className="overflow-x-auto -mx-3 md:mx-0">
+<p className="text-[10px] text-gray-400 text-right mb-1 md:hidden">← desliza para ver más →</p>
+<div className="min-w-[700px] md:min-w-0">
+<table className="w-full border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left text-gray-400">
                 <th className="px-4 py-2 text-[10px] md:text-[11px] font-bold uppercase tracking-wider">Cuadrilla</th>
@@ -227,6 +230,8 @@ export const SolicitudGasolina: React.FC<SolicitudGasolinaProps> = ({ user, user
               })}
             </tbody>
           </table>
+</div>
+</div>
         </div>
       </div>
 
